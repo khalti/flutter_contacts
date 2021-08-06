@@ -256,9 +256,13 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
     }
 
     void finishWithResult(Object result) {
-      if(this.result != null) {
-        this.result.success(result);
-        this.result = null;
+      if (this.result != null) {
+        try {
+          this.result.success(result);
+          this.result = null;
+        } catch (IllegalStateException e) {
+          this.result(FORM_OPERATION_CANCELED);
+        }
       }
     }
 
@@ -266,8 +270,13 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
     public boolean onActivityResult(int requestCode, int resultCode, Intent intent) {
       if(requestCode == REQUEST_OPEN_EXISTING_CONTACT || requestCode == REQUEST_OPEN_CONTACT_FORM) {
         try {
-          Uri ur = intent.getData();
-          finishWithResult(getContactByIdentifier(ur.getLastPathSegment()));
+          if (intent != null) {
+            Uri uri = intent.getData();
+            finishWithResult(getContactByIdentifier(uri.getLastPathSegment()));
+          } else {
+            finishWithResult(FORM_OPERATION_CANCELED);
+            return true;
+          }
         } catch (NullPointerException e) {
           finishWithResult(FORM_OPERATION_CANCELED);
         }
@@ -275,10 +284,11 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
       }
 
       if (requestCode == REQUEST_OPEN_CONTACT_PICKER) {
-        if (resultCode == RESULT_CANCELED) {
+        if (resultCode == RESULT_CANCELED || intent == null) {
           finishWithResult(FORM_OPERATION_CANCELED);
           return true;
         }
+
         Uri contactUri = intent.getData();
         Cursor cursor = contentResolver.query(contactUri, null, null, null, null);
         if (cursor.moveToFirst()) {
@@ -485,10 +495,14 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
 
     protected void onPostExecute(ArrayList<HashMap> result) {
       if (getContactResult != null) {
-        if (result == null) {
-          getContactResult.notImplemented();
-        } else {
-          getContactResult.success(result);
+        try {
+          if (result == null) {
+            getContactResult.notImplemented();
+          } else {
+            getContactResult.success(result);
+          }
+        } catch (IllegalStateException e) {
+          e.printStackTrace();
         }
       }
     }
