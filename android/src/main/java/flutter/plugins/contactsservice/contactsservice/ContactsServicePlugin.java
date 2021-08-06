@@ -261,7 +261,7 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
           this.result.success(result);
           this.result = null;
         } catch (IllegalStateException e) {
-          this.result(FORM_OPERATION_CANCELED);
+          // no-op
         }
       }
     }
