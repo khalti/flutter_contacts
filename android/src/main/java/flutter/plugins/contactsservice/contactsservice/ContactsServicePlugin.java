@@ -484,10 +484,12 @@ public class ContactsServicePlugin implements MethodCallHandler, FlutterPlugin, 
     }
 
     protected void onPostExecute(ArrayList<HashMap> result) {
-      if (result == null) {
-        getContactResult.notImplemented();
-      } else {
-        getContactResult.success(result);
+      if (getContactResult != null) {
+        if (result == null) {
+          getContactResult.notImplemented();
+        } else {
+          getContactResult.success(result);
+        }
       }
     }
   }
